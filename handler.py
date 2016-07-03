@@ -22,8 +22,6 @@ import os
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
-logging.debug('Start')
-
 # must load all shared libraries and set the R environment variables before we can import rpy2
 # load R shared libraries from lib dir
 for file in os.listdir('lib'):
@@ -48,10 +46,8 @@ def calculate_survival_stats(times, events, values_by_record):
     """
     # flatten values of two dimensional array for use by R
     # in R, matrices are simply an array where you specify number of columns per row
-    logging.debug('Unpacking values')
     flattened_values = [y for row in values_by_record for y in row]
 
-    logging.debug('Setting r variables')
     t = robjects.FloatVector(times)
     e = robjects.IntVector(events)
     v = robjects.FloatVector(flattened_values)
@@ -87,7 +83,6 @@ def calculate_survival_stats(times, events, values_by_record):
 
 
 def lambda_handler(event, context):
-    logging.debug('In handler')
     times = event['times']
     events = event['events']
     # support receiving values (ex: expression) for multiple records (ex: genes)
@@ -97,7 +92,6 @@ def lambda_handler(event, context):
 
     try:
         stats_list = calculate_survival_stats(times, events, values_by_record)
-        logging.debug('Done receiving stats ')
     except rpy2.rinterface.RRuntimeError, e:
         logging.error('Payload: {0}'.format(event))
         logging.error('Error: {0}'.format(e.message))
@@ -112,5 +106,4 @@ def lambda_handler(event, context):
 
     res = {}
     res['statistics_list'] = stats_list
-    logging.debug('End')
     return res
